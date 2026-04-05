@@ -1,0 +1,42 @@
+=== DRONE STATUSES ===
+  DR-01: IDLE          bat=  3%  zone=None  eta=0s  alert=None
+  DR-02: IDLE          bat=  1%  zone=None  eta=98.6s  alert=None
+  DR-03: RETURNING     bat=  0%  zone=Zone-A  eta=296.9s  alert=AL-20260405-085915-001
+  DR-04: RETURNING     bat=  0%  zone=Zone-A  eta=2234.2s  alert=AL-20260405-085915-001
+
+=== PRIORITY QUEUE ===
+  AL-20260405-085915-001: sev=0.27  assigned=True  dispatched=True  drone=DR-03
+
+=== HEALTH ===
+{
+  "status": "healthy",
+  "version": "2.0.0",
+  "uptime_seconds": 172.1,
+  "components": {
+    "database": "connected",
+    "yolo": {
+      "status": "loaded",
+      "device": "cpu",
+      "fp16": false,
+      "fps": 3.3,
+      "last_inference_ms": 520.6
+    },
+    "cameras": {
+      "total": 8,
+      "connected": 8
+    },
+    "drones": {
+      "total": 4,
+      "available": 2,
+      "statuses": {
+        "IDLE": 2,
+        "RETURNING": 2
+      }
+    },
+    "baseline": "loaded",
+    "queue": {
+      "depth": 1,
+      "assigned": 1
+    }
+  }
+}

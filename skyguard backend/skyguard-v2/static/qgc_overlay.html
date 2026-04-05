@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SkyGuard Command</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#0a0a0a;color:#e0e0e0;overflow-x:hidden}
+.header{background:rgba(26,26,46,0.95);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #2a2a4a}
+.header h1{font-size:18px;color:#4361ee;font-weight:700}
+.status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-left:8px}
+.connected{background:#22c55e;box-shadow:0 0 6px #22c55e}
+.disconnected{background:#ef233c;box-shadow:0 0 6px #ef233c}
+.panel{background:rgba(26,26,46,0.85);margin:8px;padding:12px;border-radius:8px;border:1px solid #2a2a4a}
+.panel h2{font-size:14px;color:#94a3b8;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.alert-card{background:rgba(40,40,70,0.9);padding:10px;margin:6px 0;border-radius:6px;border-left:3px solid #4361ee;display:flex;justify-content:space-between;align-items:center}
+.alert-card.high{border-left-color:#ef233c}
+.alert-card.medium{border-left-color:#f59e0b}
+.alert-info{flex:1}
+.alert-info .zone{font-weight:600;font-size:14px}
+.alert-info .type{font-size:11px;color:#94a3b8}
+.alert-info .severity{font-size:12px;font-weight:700}
+.severity-high{color:#ef233c}
+.severity-med{color:#f59e0b}
+.severity-low{color:#22c55e}
+.drone-card{background:rgba(40,40,70,0.9);padding:10px;margin:6px 0;border-radius:6px;display:flex;align-items:center;gap:12px}
+.drone-id{font-weight:700;font-size:14px;color:#4361ee;min-width:50px}
+.drone-status{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+.status-IDLE{background:#22c55e33;color:#22c55e}
+.status-EN_ROUTE{background:#4361ee33;color:#4361ee}
+.status-HOVERING{background:#f59e0b33;color:#f59e0b}
+.status-RETURNING{background:#94a3b833;color:#94a3b8}
+.status-REROUTING{background:#8b5cf633;color:#8b5cf6}
+.battery-bar{width:60px;height:8px;background:#333;border-radius:4px;overflow:hidden}
+.battery-fill{height:100%;border-radius:4px;transition:width 0.5s}
+.battery-high{background:#22c55e}
+.battery-mid{background:#f59e0b}
+.battery-low{background:#ef233c}
+.eta{font-size:12px;color:#94a3b8;min-width:50px}
+.btn{padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;min-height:48px;min-width:48px;touch-action:manipulation}
+.btn-dispatch{background:#4361ee;color:#fff}
+.btn-rtl{background:#f59e0b;color:#000}
+.btn-danger{background:#ef233c;color:#fff}
+.btn-small{padding:6px 12px;min-height:36px;font-size:11px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>⚡ SkyGuard Command</h1>
+  <div><span id="connLabel">Connecting...</span><span class="status-dot disconnected" id="connDot"></span></div>
+</div>
+
+<div class="panel" id="incidentPanel">
+  <h2>🚨 Active Incidents</h2>
+  <div id="alertList"><em style="color:#666">No active alerts</em></div>
+</div>
+
+<div class="panel" id="fleetPanel">
+  <h2>🛸 Fleet Status</h2>
+  <div id="droneList">Loading...</div>
+</div>
+
+<div class="panel">
+  <h2>⚡ Quick Actions</h2>
+  <div class="actions">
+    <button class="btn btn-dispatch" onclick="manualAlert()">📍 Manual Alert</button>
+    <button class="btn btn-rtl" onclick="allRTL()">🏠 All RTL</button>
+    <button class="btn btn-danger" onclick="emergencyAll()">🛑 Emergency Land All</button>
+  </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const backend=params.get('backend')||'localhost:8000';
+const API=`http://${backend}`;
+const socket=io(`http://${backend}`,{transports:['websocket','polling']});
+
+socket.on('connect',()=>{
+  document.getElementById('connDot').className='status-dot connected';
+  document.getElementById('connLabel').textContent='Connected';
+  fetch(`${API}/drones`).then(r=>r.json()).then(d=>renderDrones(d.drones||[]));
+  fetch(`${API}/alerts?status=ACTIVE`).then(r=>r.json()).then(d=>renderAlerts(d.alerts||[]));
+});
+socket.on('disconnect',()=>{
+  document.getElementById('connDot').className='status-dot disconnected';
+  document.getElementById('connLabel').textContent='Disconnected';
+});
+socket.on('drone_update',(msg)=>{
+  const d=msg?.data?.drones||[];
+  if(d.length)renderDrones(d);
+});
+socket.on('alert_created',(msg)=>{
+  const a=msg?.data;
+  if(a)addAlert(a);
+});
+
+function renderDrones(drones){
+  const el=document.getElementById('droneList');
+  el.innerHTML=drones.map(d=>{
+    const bClass=d.battery>50?'battery-high':d.battery>20?'battery-mid':'battery-low';
+    const eta=d.eta_seconds>0?`ETA ${Math.round(d.eta_seconds)}s`:'—';
+    return `<div class="drone-card">
+      <span class="drone-id">${d.drone_id}</span>
+      <span class="drone-status status-${d.status}">${d.status}</span>
+      <div><div class="battery-bar"><div class="battery-fill ${bClass}" style="width:${d.battery}%"></div></div><small>${d.battery}%</small></div>
+      <span class="eta">${eta}</span>
+      <button class="btn btn-rtl btn-small" onclick="rtl('${d.drone_id}')">RTL</button>
+    </div>`;
+  }).join('');
+}
+
+function renderAlerts(alerts){
+  const el=document.getElementById('alertList');
+  if(!alerts.length){el.innerHTML='<em style="color:#666">No active alerts</em>';return;}
+  el.innerHTML=alerts.map(a=>alertHTML(a)).join('');
+}
+function addAlert(a){
+  const el=document.getElementById('alertList');
+  if(el.innerHTML.includes('No active'))el.innerHTML='';
+  el.innerHTML=alertHTML(a)+el.innerHTML;
+}
+function alertHTML(a){
+  const sClass=a.severity>0.7?'high':a.severity>0.4?'medium':'';
+  const sColor=a.severity>0.7?'severity-high':a.severity>0.4?'severity-med':'severity-low';
+  return `<div class="alert-card ${sClass}">
+    <div class="alert-info">
+      <div class="zone">${a.zone_name||a.zone_id}</div>
+      <div class="type">${a.anomaly_type||'anomaly'}</div>
+      <div class="severity ${sColor}">${(a.severity*100).toFixed(0)}%</div>
+    </div>
+    <button class="btn btn-dispatch btn-small" onclick="dispatch('${a.alert_id}')">Dispatch</button>
+  </div>`;
+}
+
+function rtl(id){fetch(`${API}/drones/${id}/rtl`,{method:'POST'})}
+function allRTL(){fetch(`${API}/drones`).then(r=>r.json()).then(d=>(d.drones||[]).forEach(dr=>rtl(dr.drone_id)))}
+function emergencyAll(){allRTL()}
+function dispatch(id){fetch(`${API}/qgc/dispatch`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({alert_id:id})})}
+function manualAlert(){
+  const zone=prompt('Zone ID (e.g. Zone-A):','Zone-A');
+  if(!zone)return;
+  fetch(`${API}/alerts/manual`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({zone_id:zone,anomaly_type:'crowd_anomaly',severity:0.85})});
+}
+</script>
+</body>
+</html>

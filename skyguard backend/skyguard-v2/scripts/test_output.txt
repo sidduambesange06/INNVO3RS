@@ -1,0 +1,48 @@
+============================================================
+STEP 1: Check initial state
+============================================================
+  Drones: {'total': 4, 'available': 4, 'statuses': {'IDLE': 4}}
+  DR-01: IDLE         bat=100%
+  DR-02: IDLE         bat=100%
+  DR-03: IDLE         bat=100%
+  DR-04: IDLE         bat=100%
+
+============================================================
+STEP 2: Create alert in Zone-A (crowd_anomaly, severity=0.85)
+============================================================
+  Alert: AL-20260405-090911-001
+  Primary drone: DR-01
+  Secondary drone: DR-02
+  Primary ETA: Nones
+
+============================================================
+STEP 3: Drone statuses after first alert
+============================================================
+  DR-01: EN_ROUTE     bat= 96% zone=Zone-A   eta=   9.9s alert=AL-20260405-090911-001
+  DR-02: EN_ROUTE     bat= 97% zone=Zone-A   eta= 139.2s alert=AL-20260405-090911-001
+  DR-03: IDLE         bat=100% zone=---      eta=   0.0s alert=---
+  DR-04: IDLE         bat=100% zone=---      eta=   0.0s alert=---
+
+============================================================
+STEP 4: Create alert in Zone-D (weapon_detect, severity=0.95)
+  Waiting 31s for dedup window...
+============================================================
+  Alert: AL-20260405-090944-002
+  Primary drone: DR-03
+  Secondary drone: DR-04
+
+============================================================
+STEP 5: All drone statuses after 2 alerts
+============================================================
+  DR-01: HOVERING     bat= 34% zone=Zone-A   eta=   0.0s alert=AL-20260405-090911-001
+  DR-02: EN_ROUTE     bat= 34% zone=Zone-A   eta= 105.6s alert=AL-20260405-090911-001
+  DR-03: HOVERING     bat= 97% zone=Zone-D   eta=   0.0s alert=AL-20260405-090944-002
+  DR-04: EN_ROUTE     bat= 96% zone=Zone-D   eta=1987.5s alert=AL-20260405-090944-002
+
+  >> Active drones: 4/4
+
+============================================================
+STEP 6: Priority queue
+============================================================
+  AL-20260405-090944-002: sev=0.94 assigned=True dispatched=True drone=DR-03
+  AL-20260405-090911-001: sev=0.61 assigned=True dispatched=True drone=DR-01

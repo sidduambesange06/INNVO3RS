@@ -1,0 +1,23 @@
+:root {
+  --bg:               #F9FAFB;
+  --surface:          #FFFFFF;
+  --surface-raised:   #F3F4F6;
+  --border:           #E5E7EB;
+  --border-subtle:    #F3F4F6;
+
+  --text-primary:     #111827;
+  --text-secondary:   #4B5563;
+  --text-muted:       #9CA3AF;
+
+  --accent-blue:      #3B82F6;
+  --accent-green:     #10B981;
+  --accent-red:       #EF4444;
+  --accent-amber:     #F59E0B;
+  --accent-purple:    #8B5CF6;
+
+  --badge-green-bg:   rgba(16, 185, 129, 0.10);
+  --badge-red-bg:     rgba(239, 68, 68, 0.10);
+  --badge-amber-bg:   rgba(245, 158, 11, 0.10);
+  --badge-blue-bg:    rgba(59, 130, 246, 0.10);
+  --badge-purple-bg:  rgba(139, 92, 246, 0.10);
+}
