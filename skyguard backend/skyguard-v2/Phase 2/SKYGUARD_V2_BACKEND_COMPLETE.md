@@ -424,7 +424,7 @@ Gemini 1.5 Flash (`gemini-1.5-flash`) provides AI-based decision support for:
 # app/services/gemini_service.py
 import google.generativeai as genai
 
-genai.configure(api_key="AIzaSyC8VVKrWPA4ltET4RE0SV5MyrXSq8w6TkQ")
+genai.configure(api_key="")
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 class GeminiDecisionEngine:
