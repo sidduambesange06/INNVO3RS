@@ -84,10 +84,6 @@ Open `http://localhost:5173`.
 
 Alerts, drones, cameras, detections, zones, heatmap, routes, SOS and health, with 40+ REST endpoints and real-time Socket.IO events for drone positions, alerts, heatmap updates and SOS countdowns. See `docs/API_DOCUMENTATION.md`.
 
-## Team
-
-Team INNOV3RS, GNDEC Bidar. Add each member's name and role here.
-
 ## License
 
-Add a license (for example MIT) or state that the project is for demonstration only.
+Created for the Inspiron 5.0 hackathon event. Shared for demonstration purposes only.
